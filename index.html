@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- <meta http-equiv="X-UA-Compatible" content="IE=edge"> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <meta http-equiv="Content-Security-Policy" content="default-src *; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://platform.linkedin.com ">
+    <link href="src/style.css" rel="stylesheet" type="text/css"/>
+    <title>SearchEngine</title>
+</head>
+<body>
+    <div id="contener">
+        <form id="myform" method="POST">
+            <label for="fname">Search phrase:</label><br>
+            <input type="text" id="fname" name="fname" value="math"><br>
+            <label for="lname">Quantity:</label><br>
+            <input type="number" id="articles" name="lname" value=10><br>
+            <input type="submit" id="button" value="Search">
+
+        </form>
+        <div id="articles"><table id="articles"></table></div>
+    </div>
+    <script>
+        $(document).ready(function(){
+
+            $("form#myform").submit(function(event) {
+                event.preventDefault();
+                var name = $("#fname").val();
+                var numbers = $("#articles").val();
+        
+                $.ajax({
+                    url: "/search",
+                    type: "POST",
+                    data:{query:name,top:numbers},
+                    dataType : "JSON",
+                    success: function(data){
+                        let articles = $("table#articles");
+                        articles.empty()
+                        obj = data.result
+                        articles.append("<tr><th>#</th><th>Articles</th><th>Probability</th><th>URL</th></tr>")
+                        for (let i = 0; i < obj.length; i++) {
+                            articles.append("<tr><td>"+i+"</td><td>"+obj[i][0]+"</td><td>"+obj[i][1]+" %</td><td><a href="+obj[i][2]+' target="_blank">'+obj[i][0]+"</a></td></tr>")
+                        }
+                        
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
