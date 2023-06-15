@@ -7,7 +7,8 @@ const cors = require('cors')
 const bodyParser = require('body-parser')
 
 const PORT = process.env.PORT || 3000;
-const PYTHON = process.env.PYTHON || 'python3.11';
+// Change version of python if needed
+const PYTHON = process.env.PYTHON || 'python';
 
 // Define middleware
 app.use(cors());
@@ -22,6 +23,7 @@ app.post('/search', urlencodedParser, function (req, res)  {
         const query = req.body?.query ? req.body.query : "math";
         console.log(query)
         console.log(top)
+        console.log(PYTHON)
         // Run search.py and return results
         const pyProg = spawn(PYTHON, ['./search.py', query, top]);
 
@@ -32,6 +34,7 @@ app.post('/search', urlencodedParser, function (req, res)  {
             try {
                 receivedData += data.toString();
             } catch (error) {
+                console.log("ERR")
                 res.status(500).send({ error })
             }
         });
@@ -39,11 +42,13 @@ app.post('/search', urlencodedParser, function (req, res)  {
             try {
                 errorData += data.toString();
             } catch (error) {
+                console.log("ERR2")
                 res.status(500).send({ error })
             }
         });
         pyProg.on('close', (code) => {
             if (code || errorData) {
+                console.log("ERR3")
                 return res.status(500).send({ error: errorData })
             }
             res.send(JSON.parse(receivedData))

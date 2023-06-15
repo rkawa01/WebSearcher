@@ -13,8 +13,17 @@ def search(top,text):
         sites = pkl.load(read_file)
     with open("content/dict.pkl", "rb") as read_file:
         indexes = pkl.load(read_file)
-    with open("content/matrix.pkl", "rb") as read_file:
-        matrix = pkl.load(read_file)
+    # with open("content/matrix.pkl", "rb") as read_file:
+    #     matrix = pkl.load(read_file)
+    # Alternative version:
+    with open("content/U.pkl", "rb") as read_file:
+        U = pkl.load(read_file)
+    with open("content/D.pkl", "rb") as read_file:
+        D = pkl.load(read_file)
+    with open("content/V.pkl", "rb") as read_file:
+        Vt = pkl.load(read_file)
+    with open("content/length.pkl", "rb") as read_file:
+        length = pkl.load(read_file)
 
     reverse_index = {indexes[i]:i for i in indexes}
 
@@ -25,9 +34,10 @@ def search(top,text):
         if word_lemma in reverse_index:
             index = reverse_index[word_lemma]
             vector[int(index)] += 1
-    
-    prob = np.abs((vector.T @ matrix.T)) / np.sqrt(np.sum(
-            matrix ** 2, axis=1))
+    # Depending on when length was calculated it may differ result of probabilties a little bit 
+    prob = np.abs(vector.T @ Vt.T @ np.diag(D).T @ U.T) / length
+    # prob = np.abs((vector.T @ matrix.T)) / np.sqrt(np.sum(
+    #         matrix ** 2, axis=1))
     prob = [(prob[i],i) for i in range(len(prob))]
     prob.sort(reverse=True)
     all = prob[:top]
@@ -37,10 +47,12 @@ def get_links(title):
     return "https://en.wikipedia.org/wiki/"+title.replace(" ", "_")
 
 try:
+    # Remember to run: python/python3 -m spacy download en_core_web_sm
     nlp = spacy.load("en_core_web_sm")
     query = " ".join([token.lemma_ for token in nlp(sys.argv[1])])
 
     top = int(sys.argv[2])
     search(top,query)
 except Exception as e:
+    print("Error")
     sys.exit(json.dumps({"error": str(e)}))
