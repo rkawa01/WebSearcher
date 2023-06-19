@@ -34,6 +34,7 @@ def search(top,text):
         if word_lemma in reverse_index:
             index = reverse_index[word_lemma]
             vector[int(index)] += 1
+
     # Depending on when length was calculated it may differ result of probabilties a little bit 
     prob = np.abs(vector.T @ Vt.T @ np.diag(D).T @ U.T) / length
     # prob = np.abs((vector.T @ matrix.T)) / np.sqrt(np.sum(

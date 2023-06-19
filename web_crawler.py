@@ -1,10 +1,7 @@
-import json
 import pickle as pkl
 import wikipediaapi as wpa
 from urllib.error import HTTPError
 import re
-import requests
-# import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from bs4 import BeautifulSoup as bs
@@ -33,23 +30,24 @@ class WikipediaPage():
     def get_words(self,sites):
         for site in sites:
             
-            # link = site.fullurl
+            # link = site
+            # if we sent there full links we can use the above line
             link = self.get_links(site)
             try:
                 # start = perf_counter()
                 webpage = str(urlopen(link).read())
                 soup = bs(webpage, features="html.parser")
-                content = self.clean(soup.get_text())
+                content = self.filter_out(soup.get_text())
                 self.dicts.append(dict())
                 word_list = content.split()
-                stemmed = [self.wnl.lemmatize("".join(filter(lambda x: x.isalpha(), word))
+                lemmatized = [self.wnl.lemmatize("".join(filter(lambda x: x.isalpha(), word))
                                         ).casefold() for word in word_list]
                 # filter out words with length less than 3
-                word_list = list(filter(lambda x: len(x) > 2, word_list))
+                filtered = list(filter(lambda x: len(x) > 2, lemmatized))
                 # filter out words that are in stop words
-                stemmed = list(filter(lambda x: x not in self.stop_words, stemmed))
+                filtered = list(filter(lambda x: x not in self.stop_words, filtered))
          
-                for s in stemmed:
+                for s in filtered:
                     dicts_element_count = self.dicts[-1].get(s, 0)
                     if dicts_element_count == 0:
                         self.words[s] = self.words.get(s, 0) + 1
@@ -88,10 +86,13 @@ class WikipediaPage():
             pkl.dump(titles, write_file)
         
         print("Downloading categories finished")
+        # alternatively we can send the links to the get_words function
+        # self.get_words([site.fullurl for site in self.sites])
         self.get_words(titles)
         print("Downloading sites finished")
         return self.words,self.dicts
-    def clean(self,text):
+    def filter_out(self,text):
+        # get rid of all special characters
         partly = re.sub('\\\\t|\\\\n|\\\\r|\\\\a|\\\\f|\\\\v|\\\\b', " ", text)
         # get rid of all special ascii characters
         partly = re.sub('\\\\x[0-9a-fA-F]{2}', " ", partly)
