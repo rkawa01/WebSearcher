@@ -24,7 +24,7 @@ class Matrix():
                 self.matrix[i,self.reverse_index[word]] = self.dicts[i][word]
         print("frequency normalization started")
         #It's inverse document frequency
-        m = np.log10(np.array([n / sum(1 for article in self.dicts if self.keys[i] in article) for i in range(self.number_of_words)]))
+        m = np.log10(np.array([n / self.words[self.index[i]] for i in range(self.number_of_words)]))
         self.matrix = self.matrix * m
 
         #Here starts normalization of vectors
