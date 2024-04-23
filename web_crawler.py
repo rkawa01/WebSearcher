@@ -1,7 +1,7 @@
 import pickle as pkl
 import wikipediaapi as wpa
 from urllib.error import HTTPError
-import re
+import re 
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from bs4 import BeautifulSoup as bs
@@ -32,21 +32,31 @@ class WikipediaPage():
             
             # link = site
             # if we sent there full links we can use the above line
-            link = self.get_links(site)
+            link = "https://en.wikipedia.org/wiki/" + quote(site.replace(" ", "_"))
             try:
                 # start = perf_counter()
                 webpage = str(urlopen(link).read())
                 soup = bs(webpage, features="html.parser")
-                content = self.filter_out(soup.get_text())
+                text = soup.get_text()
+                
+                # get rid of all special characters
+                partly = re.sub('\\\\t|\\\\n|\\\\a|\\\\f|\\\\v|\\\\b|\\\\r', " ", text)
+
+                # get rid of all special ascii characters
+                partly = re.sub('\\\\x[0-9a-fA-F]{2}', " ", partly)
+
+                content = re.sub('[^a-zA-Z]+', ' ', partly)
+
                 self.dicts.append(dict())
                 word_list = content.split()
                 lemmatized = [self.wnl.lemmatize("".join(filter(lambda x: x.isalpha(), word))
                                         ).casefold() for word in word_list]
+                
                 # filter out words with length less than 3
                 filtered = list(filter(lambda x: len(x) > 2, lemmatized))
                 # filter out words that are in stop words
                 filtered = list(filter(lambda x: x not in self.stop_words, filtered))
-         
+               
                 for s in filtered:
                     dicts_element_count = self.dicts[-1].get(s, 0)
                     if dicts_element_count == 0:
@@ -91,15 +101,6 @@ class WikipediaPage():
         self.get_words(titles)
         print("Downloading sites finished")
         return self.words,self.dicts
-    def filter_out(self,text):
-        # get rid of all special characters
-        partly = re.sub('\\\\t|\\\\n|\\\\r|\\\\a|\\\\f|\\\\v|\\\\b', " ", text)
-        # get rid of all special ascii characters
-        partly = re.sub('\\\\x[0-9a-fA-F]{2}', " ", partly)
-        partly = re.sub('[^A-Za-z]+', ' ', partly)
-        return partly
-    def get_links(self,title):
-        return "https://en.wikipedia.org/wiki/"+quote(title.replace(" ", "_"))
 
 if __name__ == "__main__":
     # nltk.download("punkt")
